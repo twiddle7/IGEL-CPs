@@ -1,0 +1,35 @@
+
+name: Docker CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        run: docker build -t monolithic-app .
+
+      - name: Test Docker Image
+        run: docker images
+
+      - name: Run Container
+        run: docker run -d --name monolithic-test -p 5000:5000 monolithic-app
+
+      - name: Test Application
+        run: |
+          for i in {1..10}; do
+            if curl -fsS http://localhost:5000/; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs monolithic-test
+          exit 1
